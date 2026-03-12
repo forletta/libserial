@@ -9,7 +9,4 @@ select = ["E", "F", "B", "I"]
 [tool.mypy]
 python_version = "3.14"
 exclude = ["lib", ".venv"]
-
-[[tool.mypy.overrides]]
-module = "serial.*"
-ignore_missing_imports = true
+disable_error_code = ["import-untyped"]

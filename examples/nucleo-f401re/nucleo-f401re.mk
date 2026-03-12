@@ -27,7 +27,7 @@ OBJCOPY := $(PREFIX)objcopy
 # C Flags
 DEF += -D$(DEVICE_FAMILY) -DBAUDRATE=$(BAUDRATE) -DPARITY=$(PARITY)
 OPT += -Os
-DBG += -ggdb
+DBG += -ggdb3
 STD += -std=c99
 
 M_FLAGS += -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16

@@ -21,6 +21,8 @@ PIP            = $(VENV)/bin/pip
 
 # Tools
 FLASH  := $(shell which st-flash)
+REMOTE := $(shell which st-util)
+GDB    := $(shell which arm-none-eabi-gdb)
 PYTEST = $(VENV)/bin/pytest
 
 # Required Environment Variables:
@@ -30,6 +32,7 @@ PYTEST = $(VENV)/bin/pytest
 # Optional:
 # DEFAULT_COMMAND=<command> (default: flash)
 # DEFAULT_BAUDRATE=<baudrat> (default: 115200)
+# DEFAULT_RX_BUFFER_LEN=<rx_buffer_len> (default: 128)
 include .env
 
 BOARD             ?= $(DEFAULT_BOARD)
@@ -44,11 +47,13 @@ EXAMPLE_DEPS_DIR  := $(EXAMPLE_BUILD_DIR)/deps
 EXAMPLE_BIN := $(EXAMPLE_BUILD_DIR)/$(EXAMPLE).bin
 EXAMPLE_ELF := $(EXAMPLE_BUILD_DIR)/$(EXAMPLE).elf
 
-DEFAULT_BAUDRATE ?= 115200
-DEFAULT_PARITY   ?= USART_PARITY_NONE
+DEFAULT_BAUDRATE      ?= 115200
+DEFAULT_PARITY        ?= USART_PARITY_NONE
+DEFAULT_RX_BUFFER_LEN ?= 128
 
-BAUDRATE ?= $(DEFAULT_BAUDRATE)
-PARITY   ?= $(DEFAULT_PARITY)
+BAUDRATE      ?= $(DEFAULT_BAUDRATE)
+PARITY        ?= $(DEFAULT_PARITY)
+RX_BUFFER_LEN ?= $(DEFAULT_RX_BUFFER_LEN)
 
 TRACKED_VARS   = BAUDRATE PARITY
 CURRENT_CONFIG := $(foreach v,$(TRACKED_VARS),$(v)=$($(v)))

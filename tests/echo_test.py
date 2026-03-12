@@ -1,18 +1,27 @@
+import asyncio
 import os
 
 import pytest
 
 
-def test_byte_transparency(ser):
+@pytest.mark.asyncio
+async def test_byte_transparency(ser):
+    reader, writer = ser
+
     data = bytes(range(256)) * 2
 
-    assert ser.write(data) == len(data)
-    assert ser.read(len(data)) == data
+    writer.write(data)
+
+    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=2) == data
 
 
 @pytest.mark.parametrize("size", [64, 512, 1024, 4096])
-def test_burst(ser, size):
+@pytest.mark.asyncio
+async def test_burst(ser, size):
+    reader, writer = ser
+
     data = os.urandom(size)
 
-    assert ser.write(data) == size, f"Failed to write data size: {size}"
-    assert ser.read(size) == data, f"Failed to read data size: {size}"
+    writer.write(data)
+
+    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=5) == data

@@ -28,7 +28,7 @@ AR     := $(PREFIX)ar
 # C Flags
 DEF += -D$(DEVICE_FAMILY)
 OPT += -Os
-DBG += -ggdb
+DBG += -ggdb3
 STD += -std=c99
 
 M_FLAGS += -mcpu=cortex-m4 -mthumb

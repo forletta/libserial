@@ -4,18 +4,25 @@ NULL   = > .tmp 2>&1 || (cat .tmp && rm .tmp && exit 1); rm -f .tmp
 SILENT = --silent
 endif
 
-.PHONY: default build flash test pyclean
+.PHONY: default build flash debug test pyclean
 default: flash
 
 include config.mk
 include examples/$(BOARD)/$(EXAMPLE)/build.mk
 
-build: $(EXAMPLE_BIN)
+build: check-config $(EXAMPLE_BIN)
 
 flash: check-config $(EXAMPLE_BIN)
 	@echo "  FLASH   $(EXAMPLE_BIN)"
 	$(Q)$(FLASH) write $(EXAMPLE_BIN) $(FLASH_LOCATION) $(NULL)
 	$(Q)$(FLASH) reset $(NULL)
+
+debug:
+	@echo "  REMOTE"
+	$(Q)$(REMOTE) --semihosting > /dev/null 2>&1 & REMOTE_PID=$$!; \
+	echo "  GDB  $(EXAMPLE_ELF)"; \
+	$(GDB) --quiet $(EXAMPLE_ELF); \
+	kill $$REMOTE_PID || true
 
 test: $(VENV)
 	$(Q)$(PYTEST) $(TESTS_DIR)/$(EXAMPLE)_test.py
