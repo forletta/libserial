@@ -12,8 +12,6 @@
 #define LED_PORT     (GPIOA)
 #define LED_PIN      (GPIO5)
 
-// #define RX_BUFFER_LEN 128
-
 static volatile uint8_t rx_buffer[RX_BUFFER_LEN];
 
 static void rcc_setup(void) { rcc_clock_setup_pll(&rcc_hsi_configs[RCC_CLOCK_3V3_84MHZ]); }
@@ -27,7 +25,7 @@ static void gpio_setup(void) {
 static serial_dma_config_t serial_dma_config = {
     .dma = DMA1,
     .peripheral_address = (uint32_t)&USART2_DR,
-    .clken = RCC_DMA1,
+    .dma_clken = RCC_DMA1,
     .usart_irq = NVIC_USART2_IRQ,
     .tx_stream = DMA_STREAM6,
     .tx_chsel = DMA_SxCR_CHSEL_4,
@@ -41,7 +39,8 @@ static serial_dma_config_t serial_dma_config = {
 
 static serial_config_t serial_config = {
     .usart = USART2,
-    .clken = RCC_USART2,
+    .usart_clken = RCC_USART2,
+    .gpio_clken = RCC_GPIOA,
     .gpio_port = GPIOA,
     .gpio_pins = GPIO3 | GPIO2,
     .baudrate = BAUDRATE, // configured via the -DBAUDRATE=<baudrate> flag

@@ -6,15 +6,15 @@
 #include <stdbool.h>
 
 static volatile uint32_t usart = 0;
-static volatile serial_dma_config_t *dma_config;
+static volatile serial_dma_config_t *dma_config = NULL;
 
 static volatile bool chunk_ready = false;
 static volatile size_t chunk_head = 0;
 static volatile size_t chunk_tail = 0;
 
 void serial_setup(const serial_config_t *config) {
-    rcc_periph_clock_enable(config->clken);
-    rcc_periph_clock_enable(config->dma_config->clken);
+    rcc_periph_clock_enable(config->gpio_clken);
+    rcc_periph_clock_enable(config->usart_clken);
 
     gpio_mode_setup(config->gpio_port, GPIO_MODE_AF, GPIO_PUPD_NONE, config->gpio_pins);
     gpio_set_af(config->gpio_port, GPIO_AF7, config->gpio_pins);
@@ -33,6 +33,8 @@ void serial_setup(const serial_config_t *config) {
 
     if (!dma_config)
         return;
+
+    rcc_periph_clock_enable(dma_config->dma_clken);
 
     nvic_set_priority(dma_config->tx_irq, 0);
     nvic_enable_irq(dma_config->tx_irq);

@@ -18,7 +18,8 @@ static void gpio_setup(void) {
 
 static serial_config_t serial_config = {
     .usart = USART2,
-    .clken = RCC_USART2,
+    .usart_clken = RCC_USART2,
+    .gpio_clken = RCC_GPIOA,
     .gpio_port = GPIOA,
     .gpio_pins = GPIO3 | GPIO2,
     .baudrate = BAUDRATE, // configured via the -DBAUDRATE=<baudrate> flag

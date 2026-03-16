@@ -6,7 +6,7 @@
 typedef struct {
     uint32_t dma;
     uint32_t peripheral_address;
-    enum rcc_periph_clken clken;
+    enum rcc_periph_clken dma_clken;
     uint8_t usart_irq;
     uint8_t tx_stream;
     uint32_t tx_chsel;
@@ -20,7 +20,8 @@ typedef struct {
 
 typedef struct {
     uint32_t usart;
-    enum rcc_periph_clken clken;
+    enum rcc_periph_clken usart_clken;
+    enum rcc_periph_clken gpio_clken;
     uint32_t gpio_port;
     uint16_t gpio_pins;
     uint32_t baudrate;
