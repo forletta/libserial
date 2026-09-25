@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define SERIAL_PACKET_ENCODE_SIZE(size) ((size) + 2 + ((size) / 256))
+
 typedef struct {
     uint32_t dma;
     uint32_t peripheral_address;
@@ -47,3 +49,6 @@ void serial_recv_nonblocking_isr(void);
 bool serial_chunk_ready(void);
 uint8_t *serial_chunk_ptr(void);
 size_t serial_chunk_len(void);
+
+void serial_send_packet_blocking(uint8_t *packet_buf, size_t packet_len, uint8_t *encode_buf, size_t encode_buf_len);
+size_t serial_recv_packet_blocking(uint8_t *packet_buf, size_t packet_buf_len);

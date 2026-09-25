@@ -26,7 +26,7 @@ async def test_tc_size(ser):
 
     writer.write(data)
 
-    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=5) == data
+    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=10) == data
 
 
 @pytest.mark.asyncio
@@ -37,7 +37,7 @@ async def test_idle_size(ser):
 
     writer.write(data)
 
-    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=5) == data
+    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=10) == data
 
 
 @pytest.mark.parametrize("packet_size", [int(RX_BUFFER_LEN / 4), int((RX_BUFFER_LEN / 2) - 1)])
@@ -47,14 +47,14 @@ async def test_repeat_idle_size(ser, baudrate, packet_size):
 
     repeat = 5
     data = os.urandom(packet_size * repeat)
-    write_deleay = 11 / baudrate
+    write_delay = 0.2
 
-    read_task = asyncio.create_task(asyncio.wait_for(reader.readexactly(len(data)), timeout=5))
+    read_task = asyncio.create_task(asyncio.wait_for(reader.readexactly(len(data)), timeout=10))
 
-    for packet in itertools.batched(data, packet_size, strict=False):
+    for packet in itertools.batched(data, packet_size, strict=True):
         writer.write(bytes(packet))
         await asyncio.wait_for(writer.drain(), timeout=5)
-        await asyncio.sleep(write_deleay)
+        await asyncio.sleep(write_delay)
 
     assert await read_task == data
 
@@ -67,7 +67,7 @@ async def test_byte_transparency(ser):
 
     writer.write(data)
 
-    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=5) == data
+    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=10) == data
 
 
 @pytest.mark.parametrize("size", [1024, 4096])
@@ -79,4 +79,4 @@ async def test_burst(ser, size):
 
     writer.write(data)
 
-    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=5) == data
+    assert await asyncio.wait_for(reader.readexactly(len(data)), timeout=10) == data

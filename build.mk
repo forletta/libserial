@@ -15,11 +15,12 @@ OBJS_DIR    = $(BUILD_DIR)/objs
 DEPS_DIR    = $(BUILD_DIR)/deps
 
 # Library Directories
-OPENCM3_DIR ?= $(PROJECT_DIR)/lib/libopencm3
+OPENCM3_DIR  ?= $(PROJECT_DIR)/lib/libopencm3
+NANOCOBS_DIR ?= $(PROJECT_DIR)/lib/nanocobs
 
 # Sources
-INCS := inc $(OPENCM3_DIR)/include
-SRCS := $(shell find $(PROJECT_DIR)/src -name "*.c")
+INCS := inc $(OPENCM3_DIR)/include $(NANOCOBS_DIR)
+SRCS := $(NANOCOBS_DIR)/cobs.c $(shell find $(PROJECT_DIR)/src -name "*.c")
 OBJS := $(patsubst $(PROJECT_DIR)/%.c, $(OBJS_DIR)/%.o, $(SRCS))
 DEPS := $(patsubst $(PROJECT_DIR)/%.c, $(DEPS_DIR)/%.d, $(SRCS))
 

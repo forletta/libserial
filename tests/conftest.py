@@ -25,13 +25,16 @@ def parity(request):
     return request.param
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def flash_firmware(baudrate, parity):
     env = os.environ.copy()
     env["BAUDRATE"] = str(baudrate)
     env["PARITY"] = str(parity)
 
-    subprocess.run(["make", "flash", "EXAMPLE=echo"], env=env, check=True, capture_output=True)
+    try:
+        subprocess.run(["make", "flash"], env=env, check=True, capture_output=True)
+    except subprocess.CalledProcessError:
+        pytest.exit(reason="Failed to flash device", returncode=1)
 
 
 @pytest_asyncio.fixture
@@ -56,4 +59,4 @@ async def ser(baudrate, parity):
 
     writer.close()
     await writer.wait_closed()
-    await asyncio.sleep(0.1)  # Settle time
+    await asyncio.sleep(0.1)

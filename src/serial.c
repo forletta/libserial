@@ -1,4 +1,5 @@
 #include "serial.h"
+#include "cobs.h"
 #include "libopencm3/cm3/nvic.h"
 #include "libopencm3/stm32/dma.h"
 #include "libopencm3/stm32/gpio.h"
@@ -163,3 +164,39 @@ bool serial_chunk_ready(void) {
 uint8_t *serial_chunk_ptr(void) { return &dma_config->rx_buffer[chunk_head]; }
 
 size_t serial_chunk_len(void) { return chunk_tail - chunk_head; }
+
+void serial_send_packet_blocking(uint8_t *packet_buf, size_t packet_len, uint8_t *encode_buf, size_t encode_buf_len) {
+    size_t encoded_len;
+
+    cobs_encode(packet_buf, packet_len, encode_buf, encode_buf_len, &encoded_len);
+
+    serial_send_blocking(encode_buf, encoded_len);
+}
+
+size_t serial_recv_packet_blocking(uint8_t *packet_buf, size_t packet_buf_len) {
+    cobs_decode_inc_ctx_t ctx;
+    cobs_decode_inc_begin(&ctx);
+
+    bool completed = false;
+    size_t decoded_len = 0;
+
+    while (!completed) {
+        uint8_t byte = serial_recv_blocking();
+
+        size_t chunck_decoded_len, chunk_consumed_len;
+
+        cobs_decode_inc_args_t args = {
+            .dec_dst = packet_buf + decoded_len,
+            .dec_dst_max = packet_buf_len - decoded_len,
+            .enc_src = &byte,
+            .enc_src_max = 1,
+        };
+
+        // TODO: Make these packet functions fallible
+        cobs_ret_t r = cobs_decode_inc(&ctx, &args, &chunk_consumed_len, &chunck_decoded_len, &completed);
+
+        decoded_len += chunck_decoded_len;
+    }
+
+    return decoded_len;
+}
