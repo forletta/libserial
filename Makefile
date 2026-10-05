@@ -25,7 +25,7 @@ debug:
 	kill $$REMOTE_PID || true
 
 test: $(VENV)
-	$(Q)$(PYTEST) $(TESTS_DIR)/$(EXAMPLE)_test.py
+	$(Q)$(PYTEST) -s $(TESTS_DIR)/$(EXAMPLE)_test.py
 
 $(VENV):
 	@echo "  VENV"

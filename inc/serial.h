@@ -18,6 +18,8 @@ typedef struct {
     uint8_t rx_irq;
     uint8_t *rx_buffer;
     size_t rx_buffer_len;
+    uint8_t *packet_buf;
+    size_t packet_buf_len;
 } serial_dma_config_t;
 
 typedef struct {
@@ -41,6 +43,7 @@ void serial_send_blocking(uint8_t *ptr, size_t len);
 uint8_t serial_recv_blocking(void);
 
 void serial_send_nonblocking(uint8_t *ptr, size_t len);
+bool serial_sent(void);
 void serial_send_nonblocking_isr(void);
 
 void serial_recv_nonblocking_start(void);
@@ -52,3 +55,10 @@ size_t serial_chunk_len(void);
 
 void serial_send_packet_blocking(uint8_t *packet_buf, size_t packet_len, uint8_t *encode_buf, size_t encode_buf_len);
 size_t serial_recv_packet_blocking(uint8_t *packet_buf, size_t packet_buf_len);
+
+void serial_send_packet_nonblocking(uint8_t *packet_buf, size_t packet_len, uint8_t *encode_buf, size_t encode_buf_len);
+
+bool serial_packet_ready(void);
+uint8_t *serial_packet_ptr(void);
+size_t serial_packet_len(void);
+void serial_packet_pop(void);

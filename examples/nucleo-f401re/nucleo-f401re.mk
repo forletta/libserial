@@ -41,6 +41,7 @@ CFLAGS += $(DEF) $(OPT) $(DBG) $(STD) $(M_FLAGS) $(W_FLAGS) $(F_FLAGS) $(I_FLAGS
 LDFLAGS += $(foreach dir, $(LINKER_DIRS), -L$(dir))
 LDFLAGS += -T$(LINKER_SCRIPT)
 LDFLAGS += --specs=nosys.specs -nostartfiles -Wl,--gc-sections
+LDFLAGS += $(M_FLAGS)
 LDLIBS  += $(foreach dir, $(LINKER_LIBS), -l$(dir))
 
 $(EXAMPLE_BIN): $(EXAMPLE_ELF) $(CONFIG)

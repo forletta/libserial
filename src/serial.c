@@ -1,5 +1,6 @@
 #include "serial.h"
 #include "cobs.h"
+#include "crique.h"
 #include "libopencm3/cm3/nvic.h"
 #include "libopencm3/stm32/dma.h"
 #include "libopencm3/stm32/gpio.h"
@@ -9,9 +10,17 @@
 static volatile uint32_t usart = 0;
 static volatile serial_dma_config_t *dma_config = NULL;
 
+static volatile bool sent = false;
+
 static volatile bool chunk_ready = false;
 static volatile size_t chunk_head = 0;
 static volatile size_t chunk_tail = 0;
+
+static volatile cobs_decode_inc_ctx_t cobs_decode_inc_ctx = {
+    .state = COBS_DECODE_READ_CODE,
+};
+
+static volatile crique_t packet_queue = {};
 
 void serial_setup(const serial_config_t *config) {
     rcc_periph_clock_enable(config->gpio_clken);
@@ -34,6 +43,8 @@ void serial_setup(const serial_config_t *config) {
 
     if (!dma_config)
         return;
+
+    crique((crique_t *)&packet_queue, dma_config->packet_buf, dma_config->packet_buf_len);
 
     rcc_periph_clock_enable(dma_config->dma_clken);
 
@@ -82,7 +93,11 @@ void serial_send_nonblocking(uint8_t *ptr, size_t len) {
     // ENABLE:
     dma_enable_stream(dma_config->dma, dma_config->tx_stream);
     usart_enable_tx_dma(usart);
+
+    sent = false;
 }
+
+bool serial_sent(void) { return sent; }
 
 void serial_send_nonblocking_isr(void) {
     if (dma_config && dma_get_interrupt_flag(dma_config->dma, dma_config->tx_stream, DMA_TCIF)) {
@@ -91,6 +106,8 @@ void serial_send_nonblocking_isr(void) {
 
         usart_disable_tx_dma(usart);
         dma_disable_stream(dma_config->dma, dma_config->tx_stream);
+
+        sent = true;
     }
 }
 
@@ -200,3 +217,66 @@ size_t serial_recv_packet_blocking(uint8_t *packet_buf, size_t packet_buf_len) {
 
     return decoded_len;
 }
+
+void serial_send_packet_nonblocking(uint8_t *packet_buf, size_t packet_len, uint8_t *encode_buf,
+                                    size_t encode_buf_len) {
+    size_t encoded_len;
+
+    cobs_encode(packet_buf, packet_len, encode_buf, encode_buf_len, &encoded_len);
+
+    serial_send_nonblocking(encode_buf, encoded_len);
+}
+
+bool serial_packet_ready(void) {
+    // discard volatile
+    crique_t *cq = (crique_t *)&packet_queue;
+    cobs_decode_inc_ctx_t *ctx = (cobs_decode_inc_ctx_t *)&cobs_decode_inc_ctx;
+
+    if (crique_peek(cq) != NULL)
+        return true;
+
+    if (!serial_chunk_ready())
+        return false;
+
+    uint8_t *enc_src = serial_chunk_ptr();
+    size_t enc_src_len = serial_chunk_len();
+
+    size_t total_src_consumed = 0;
+
+    while (total_src_consumed < enc_src_len) {
+        bool complete = false;
+
+        while (!complete) {
+            if (total_src_consumed == enc_src_len)
+                return false;
+
+            uint8_t *enc_src_head = enc_src + total_src_consumed;
+            size_t enc_src_remaining = enc_src_len - total_src_consumed;
+
+            cobs_decode_inc_args_t args = {
+                .enc_src = enc_src_head,
+                .enc_src_max = enc_src_remaining,
+                .dec_dst = crique_write_ensure_remaining(cq, 4),
+                .dec_dst_max = crique_write_remaining(cq),
+            };
+
+            size_t src_consumed = 0, dst_written = 0;
+            cobs_decode_inc(ctx, &args, &src_consumed, &dst_written, &complete);
+
+            total_src_consumed += src_consumed;
+            crique_written(cq, dst_written);
+        }
+
+        total_src_consumed += 1; // 0 seperator
+
+        crique_push(cq);
+        cobs_decode_inc_begin(ctx);
+    }
+
+    return true;
+}
+uint8_t *serial_packet_ptr(void) { return crique_peek((crique_t *)&packet_queue); }
+
+size_t serial_packet_len(void) { return crique_peek_len((crique_t *)&packet_queue); }
+
+void serial_packet_pop(void) { crique_pop((crique_t *)&packet_queue); }
