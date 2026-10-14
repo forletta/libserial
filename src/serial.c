@@ -256,8 +256,8 @@ bool serial_packet_ready(void) {
             cobs_decode_inc_args_t args = {
                 .enc_src = enc_src_head,
                 .enc_src_max = enc_src_remaining,
-                .dec_dst = crique_write_ensure_remaining(cq, 4),
-                .dec_dst_max = crique_write_remaining(cq),
+                .dec_dst = crique_get_write_ptr_ensure_cap(cq, 1),
+                .dec_dst_max = crique_write_cap(cq),
             };
 
             size_t src_consumed = 0, dst_written = 0;

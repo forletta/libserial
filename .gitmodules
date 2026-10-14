@@ -4,3 +4,6 @@
 [submodule "lib/nanocobs"]
 	path = lib/nanocobs
 	url = https://github.com/charlesnicholson/nanocobs.git
+[submodule "lib/crique"]
+	path = lib/crique
+	url = https://github.com/forletta/crique.git
